@@ -74,12 +74,12 @@ class BaseDataSet(data.Dataset):
 
         if dataset=='gta5':
             if self.plabel_path is None:
-                label_root = osp.join(self.root, 'labels/labels')
+                label_root = osp.join(self.root, 'labels')
             else:
                 label_root = self.plabel_path
 
             for name in self.img_ids:
-                img_file = osp.join(self.root, "images/images/%s" % name)
+                img_file = osp.join(self.root, "images/%s" % name)
                 label_file = osp.join(label_root, "%s" % name)
                 self.files.append({
                     "img": img_file,

@@ -23,8 +23,10 @@ class Trainer(BaseTrainer):
     def iter(self, batch):
         img, seg_label, _, _, name = batch
         seg_label = seg_label.long().to(self.device)
+        # print(type(seg_label), seg_label[0], seg_label.shape)
         b, c, h, w = img.shape
-        seg_pred = self.model(img.to(self.device))
+        seg_pred, feat = self.model(img.to(self.device))
+        # print(type(seg_pred), seg_pred[0], seg_pred.shape)
         seg_loss = F.cross_entropy(seg_pred, seg_label, ignore_index=255)
         self.losses.seg_loss = seg_loss
         loss = seg_loss
@@ -93,7 +95,7 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             for index, batch in tqdm(enumerate(testloader)):
                 image, label, _, _, name = batch
-                output =  self.model(image.cuda())
+                output, features =  self.model(image.cuda())
                 label = label.cuda()
                 output = interp(output).squeeze()
                 #output = output.squeeze()
@@ -124,19 +126,21 @@ class Trainer(BaseTrainer):
             acc = inter/preds
             if self.config.source=='synthia':
                 iou = iou.squeeze()
-                cass13_iou = torch.cat((iou[:3], iou[6:9], iou[10:14], iou[15:16], iou[17:]))
+                class13_iou = torch.cat((iou[:3], iou[6:9], iou[10:14], iou[15:16], iou[17:]))
                 class13_miou = class13_iou.mean().item()
                 print('13-Class mIoU:{:.2%}'.format(class13_miou))
                 print(class13_iou)
                 print(class13_miou)
-            mIoU = iou.mean().item()
-            mAcc = acc.mean().item()
-            iou = iou.cpu().numpy()
-            #print('mIoU: {:.2%} mAcc : {:.2%} '.format(mIoU, mAcc))
-            if self.config.neptune:
-                neptune.send_metric('mIoU', mIoU)
-                neptune.send_metric('mAcc', mAcc)
-        return class13_miou
+                return class13_miou
+            else:
+                mIoU = iou.mean().item()
+                mAcc = acc.mean().item()
+                iou = iou.cpu().numpy()
+                #print('mIoU: {:.2%} mAcc : {:.2%} '.format(mIoU, mAcc))
+                if self.config.neptune:
+                    neptune.send_metric('mIoU', mIoU)
+                    neptune.send_metric('mAcc', mAcc)
+                return mIoU
 
     def print_loss(self, iter):
         iter_infor = ('iter = {:6d}/{:6d}, exp = {}'.format(iter, self.config.num_steps, self.config.note))

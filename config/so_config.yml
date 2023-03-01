@@ -42,7 +42,7 @@ scale_max: 1.5
 rec: False
 
 # Model hypers
-init_weight: './weights/DeepLab_init.pth'
+init_weight: '/share_chairilg/weights/DeepLab_resnet_pretrained_init_dass.pth'
 restore_from: None
 
 snapshot: './results/source_only_half/snapshot/'
@@ -50,7 +50,7 @@ result: './results/source_only_half/miou_result/'
 log: './results/source_only_half/log/'
 plabel: './plabel'
 gta5: {
-        data_dir: '/dataset/GTA5/',
+        data_dir: '/share_chairilg/data/gta5',
         data_list: './dataset/list/gta5_list.txt',
         input_size: [1280, 720]
         }
@@ -60,7 +60,7 @@ synthia: {
         input_size: [1280, 760]
         }
 cityscapes: {
-        data_dir: '/dataset/cityscapes',
+        data_dir: '/share_chairilg/data/cityscapes/uda_variant',
         data_list: './dataset/list/cityscapes_train.txt',
         input_size: [1024, 512]
         }
