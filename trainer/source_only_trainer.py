@@ -12,6 +12,8 @@ import math
 from PIL import Image
 import copy
 import torch.nn.functional as F
+from tqdm import tqdm
+import wandb
 
 class Trainer(BaseTrainer):
     def __init__(self, model, config, writer):
@@ -30,11 +32,12 @@ class Trainer(BaseTrainer):
         seg_loss = F.cross_entropy(seg_pred, seg_label, ignore_index=255)
         self.losses.seg_loss = seg_loss
         loss = seg_loss
+        wandb.log({"train_loss":loss})
         loss.backward()
 
     def train(self):
         if self.config.neptune:
-            neptune.init(project_qualified_name="leegeon30/segmentation-DA")
+            neptune.init(project_qualified_name="nik1806/DASS-training")
             neptune.create_experiment(params=self.config, name=self.config['note'])
 
         if self.config.multigpu:
@@ -49,7 +52,7 @@ class Trainer(BaseTrainer):
         best_miou = 0
         cu_iter = 0
         print(len(self.loader))
-        for i_iter, batch in enumerate(self.loader):
+        for i_iter, batch in tqdm(enumerate(self.loader)):
             cu_iter +=1
             adjust_learning_rate(self.optim, cu_iter, self.config)
             self.optim.zero_grad()
@@ -136,6 +139,11 @@ class Trainer(BaseTrainer):
                 mIoU = iou.mean().item()
                 mAcc = acc.mean().item()
                 iou = iou.cpu().numpy()
+
+                wandb.log(
+                            {"mAcc":mAcc, "mIoU":mIoU}
+                        )
+
                 #print('mIoU: {:.2%} mAcc : {:.2%} '.format(mIoU, mAcc))
                 if self.config.neptune:
                     neptune.send_metric('mIoU', mIoU)

@@ -31,7 +31,7 @@ class BaseTrainer(object):
             for i_iter in range(self.config.num_steps):
                 losses = self.iter(i_iter)
                 if i_iter==0 and self.config.neptune:
-                    neptune.init(project_qualified_name='leegeon30/segmentation-DA')
+                    neptune.init(project_qualified_name='nik1806/DASS-training')
                     neptune.create_experiment(params=self.config, name=self.config['note'])
                 if i_iter % self.config.print_freq ==0:
                     self.print_loss(i_iter)

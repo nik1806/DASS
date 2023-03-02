@@ -17,6 +17,14 @@ import time, datetime
 import copy
 import numpy as np
 import random
+import wandb
+
+##!! remove key when making public
+os.environ["WANDB_API_KEY"]="8f4eb3e6949541646d5dfc27a84f62fecd62413c"
+
+## uncomment following lines for debugging
+# os.environ["WANDB_SILENT"] = "true"
+# os.environ["WANDB_MODE"] = "dryrun"
 
 def main():
     torch.manual_seed(1234)
@@ -29,6 +37,13 @@ def main():
 
     config, writer = init_config("config/so_config.yml", sys.argv)
 
+    wandb.login()
+    wandb.init(
+                project='DASS-retraining', 
+                name="source training - DeepLabv2",
+                config=config,
+                )
+
     if config.source=='synthia':
         config.num_classes=16
     else:
@@ -39,6 +54,8 @@ def main():
     trainer = Trainer(model, config, writer)
 
     trainer.train()
+
+    wandb.finish()
 
 
 if __name__ == "__main__":
