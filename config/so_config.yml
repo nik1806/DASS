@@ -10,7 +10,7 @@ fix_seed: True
 # Optimizaers
 learning_rate: 7.5e-5
 num_steps: 5000
-epochs: 2
+epochs: 20
 weight_decay: 0.0005
 momentum: 0.9
 power: 0.9

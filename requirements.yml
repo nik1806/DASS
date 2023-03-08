@@ -180,7 +180,7 @@ dependencies:
     - jupyterlab-widgets==3.0.3
     - kiwisolver==1.4.4
     - lazy-loader==0.1
-    - lpmp-py==0.0.1
+    # - lpmp-py==0.0.1
     - mako==1.2.4
     - markdown==3.4.1
     - markupsafe==2.1.1
@@ -221,7 +221,7 @@ dependencies:
     - pure-eval==0.2.2
     - pyasn1==0.4.8
     - pyasn1-modules==0.2.8
-    - pycocotools==2.0.5
+    # - pycocotools==2.0.5
     - pydeprecate==0.3.2
     - pygments==2.13.0
     - pyjwt==2.6.0

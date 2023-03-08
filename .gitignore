@@ -10,6 +10,8 @@
 plabel/
 results/
 weights/
+cache/
+wandb/
 
 .ipynb_checkpoints
 */.ipynb_checkpoints/*

@@ -1,8 +1,8 @@
 import torch
 import os.path as osp
-import neptune
+# import neptune
 import torch.nn as nn
-import neptune
+# import neptune
 from dataset import dataset
 from tqdm import tqdm
 import numpy as np
@@ -39,7 +39,7 @@ class BaseTrainer(object):
                     self.save_model(i_iter)
                 if self.config.val and i_iter % self.config.val_freq ==0 and i_iter!=0:
                     self.validate()
-            neptune.stop()
+            # neptune.stop()
 
         def save_model(self, iter):
             tmp_name = '_'.join((self.config.source, str(iter))) + '.pth'

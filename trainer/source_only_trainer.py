@@ -7,7 +7,7 @@ import os.path as osp
 from dataset import dataset
 import  torch.optim as optim
 from tqdm import tqdm
-import neptune
+# import neptune
 import math
 from PIL import Image
 import copy
@@ -52,24 +52,28 @@ class Trainer(BaseTrainer):
         best_miou = 0
         cu_iter = 0
         print(len(self.loader))
-        for i_iter, batch in tqdm(enumerate(self.loader)):
-            cu_iter +=1
-            adjust_learning_rate(self.optim, cu_iter, self.config)
-            self.optim.zero_grad()
-            self.losses = edict({})
-            losses = self.iter(batch)
+        for epoch in range(self.config.epochs):
+            for i_iter, batch in tqdm(enumerate(self.loader)):
+                cu_iter +=1
+                adjust_learning_rate(self.optim, cu_iter, self.config)
+                self.optim.zero_grad()
+                self.losses = edict({})
+                # losses = 
+                self.iter(batch)
 
-            self.optim.step()
-            if cu_iter % self.config.print_freq ==0:
-                self.print_loss(cu_iter)
-            if self.config.val and cu_iter % self.config.val_freq ==0 and cu_iter!=0:
-                miou = self.validate()
-                if best_miou < miou:
-                    best_miou = miou
-                    self.save_model('best_source_only')
-                self.model = self.model.train()
-        if self.config.neptune:
-            neptune.stop()
+                self.optim.step()
+                if cu_iter % self.config.print_freq ==0:
+                    self.print_loss(cu_iter)
+                if self.config.val and cu_iter % self.config.val_freq ==0 and cu_iter!=0:
+                    miou = self.validate()
+                    if best_miou < miou:
+                        best_miou = miou
+                        wandb.log({"best_miou": best_miou})
+                        print(f"best miou:{best_miou}, epoch:{epoch}, iter:{cu_iter}")
+                        self.save_model('best_source_only')
+                    self.model = self.model.train()
+            if self.config.neptune:
+                neptune.stop()
 
     def resume(self):
         self.tea = copy.deepcopy(self.model)
@@ -85,7 +89,7 @@ class Trainer(BaseTrainer):
         torch.save(self.model.state_dict(), osp.join(self.config["snapshot"], name))
 
     def save_model(self, iter, rep_teacher=False):
-        tmp_name = '_'.join(("Synthia", str(iter))) + '.pth'
+        tmp_name = '_'.join(("GTA5", str(iter))) + '.pth'
         torch.save(self.model.state_dict(), osp.join(self.config['snapshot'], tmp_name))
 
     def validate(self):

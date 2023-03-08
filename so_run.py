@@ -21,6 +21,7 @@ import wandb
 
 ##!! remove key when making public
 os.environ["WANDB_API_KEY"]="8f4eb3e6949541646d5dfc27a84f62fecd62413c"
+# os.environ["WANDB_DISABLE_SERVICE"]="True"
 
 ## uncomment following lines for debugging
 # os.environ["WANDB_SILENT"] = "true"
@@ -37,10 +38,11 @@ def main():
 
     config, writer = init_config("config/so_config.yml", sys.argv)
 
-    wandb.login()
+    wandb.login(timeout=300)
     wandb.init(
+                entity="nik1806",
                 project='DASS-retraining', 
-                name="source training - DeepLabv2",
+                name="Run: Source training - DeepLabv2",
                 config=config,
                 )
 
@@ -50,6 +52,7 @@ def main():
         config.num_classes=19
 
     model = init_model(config)
+    wandb.watch(model, log='all')
 
     trainer = Trainer(model, config, writer)
 
