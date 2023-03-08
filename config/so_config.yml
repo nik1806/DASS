@@ -28,8 +28,8 @@ val_freq: 300
 # Dataset
 source: 'gta5'
 target: 'cityscapes'
-worker: 1
-batch_size: 2
+worker: 4
+batch_size: 4 #2
 
 #Transforms
 input_src: 720
