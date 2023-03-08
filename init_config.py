@@ -14,6 +14,7 @@ def easy_dic(dic):
         if isinstance(value, dict):
             dic[key] = edict(value)
     return dic
+
 def show_config(config, sub=False):
     msg = ''
     for key, value in config.items():

@@ -19,6 +19,7 @@ from utils.func import Acc, thres_cb_plabel, gene_plabel_prop, mask_fusion
 from utils.pool import Pool
 from utils.flatwhite import *
 from trainer.base_trainer import *
+import wandb
 
 class Trainer(BaseTrainer):
     def __init__(self, model, config, writer):
@@ -30,6 +31,7 @@ class Trainer(BaseTrainer):
         self.config = config
         self.writer = writer
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
     def entropy_loss(self, p):
         p = F.softmax(p, dim=1)
         log_p = F.log_softmax(p, dim=1)
@@ -155,6 +157,8 @@ class Trainer(BaseTrainer):
 
         loss.backward()
 
+        wandb.log({'train_loss': loss})
+
     def train(self):
         if self.config.neptune:
             neptune.init(project_qualified_name="leegeon30/segmentation-DA")
@@ -189,6 +193,7 @@ class Trainer(BaseTrainer):
             self.source_loader, self.target_loader, _ = dataset.init_pair_dataset(
                 self.config,
                 plabel_path=self.plabel_path,
+                # plabel_path=None, ##!!
                 source_plabel_path = None,
                 target_selected=self.target_all)
 
@@ -216,6 +221,11 @@ class Trainer(BaseTrainer):
                             best_epoch = epoch
                             best_iter = i_iter
                             print('best miou : %.2f, r : %d, epoch : %d, iter: %d'%(best_miou*100, best_r, best_epoch, best_iter))
+                            wandb.log({
+                                    "best_miou":best_miou,
+                                    "best_epoch":epoch,
+                                    "best_iter":i_iter,   
+                                       })
                             self.save_model('baseline')
                     #if i_iter % self.config.save_freq ==0 and i_iter!=0:
                     #    self.save_model(r*self.config.num_steps + cu_step)
@@ -394,6 +404,12 @@ class Trainer(BaseTrainer):
 
             iou = inter/union
             acc = inter/preds
+
+            wandb.log({
+                "mIoU":iou.mean().item(),
+                "mAcc":acc.mean().item()
+            })
+            
             if self.config.source=='synthia':
                 iou = iou.squeeze()
                 class16_iou = torch.cat((iou[:9], iou[10:14], iou[15:16], iou[17:]))
