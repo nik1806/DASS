@@ -5,7 +5,7 @@ from utils.flatwhite import *
 from easydict import EasyDict as edict
 import os.path as osp
 from dataset import dataset
-import neptune
+# import neptune
 import math
 from PIL import Image
 from utils.meters import AverageMeter, GroupAverageMeter
@@ -181,7 +181,9 @@ class Trainer(BaseTrainer):
             if r!=0:
                 self.cb_thres = self.gene_thres(self.config.cb_prop + self.config.thres_inc * r)
                 self.save_pred(r)
-            self.plabel_path = osp.join(self.config.plabel, self.config.note, str(r))
+                self.plabel_path = osp.join(self.config.plabel, self.config.note, str(r)) ##!!
+            else:
+                self.plabel_path = None # use default path at r=0
 
             self.optim = torch.optim.SGD(
                 self.model.optim_parameters(self.config.learning_rate),
@@ -359,9 +361,10 @@ class Trainer(BaseTrainer):
             neptune.send_metric("Prop", props.avg)
 
     def save_model(self, iter):
-        #tmp_name = "_".join(("GTA5", str(iter))) + ".pth"
-        tmp_name = "_".join(("Synthia", str(iter))) + ".pth"
+        tmp_name = "_".join(("GTA5", str(iter))) + ".pth"
+        # tmp_name = "_".join(("Synthia", str(iter))) + ".pth"
         torch.save(self.model.state_dict(), osp.join(self.config["snapshot"], tmp_name))
+        wandb.save(osp.join(self.config["snapshot"], tmp_name)) # save model online ##!!
 
     def validate(self):
         self.model = self.model.eval()

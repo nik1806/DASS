@@ -54,9 +54,10 @@ def main():
     wandb.init(
                 entity="nik1806",
                 project='DASS-retraining', 
-                name="Dry run: Method retraining",
+                name="Run: damnet method retraining",
                 config=config,
                 )
+    # wandb.run.log_code(".") # to save additional code
 
     config.num_classes = 19
 

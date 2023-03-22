@@ -38,7 +38,7 @@ round_start: 0
 
 # Optimizers
 learning_rate: 7.5e-5
-num_steps: 100.0e+3
+num_steps: 100000
 epochs: 30
 weight_decay: 0.0005
 momentum: 0.9
