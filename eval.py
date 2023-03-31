@@ -90,6 +90,7 @@ def compute_iou(model, testloader, args):
 
         iou = inter/union
         acc = inter/preds
+
         if args.source=='synthia':
             iou = iou.squeeze()
             class16_iou = torch.cat((iou[:9], iou[10:14], iou[15:16], iou[17:]))
@@ -100,6 +101,7 @@ def compute_iou(model, testloader, args):
             print(class13_iou)
             print('13-Class mIoU:{:.2%}'.format(class13_miou))
             print(class16_iou)
+
         mIoU = iou.mean().item()
         mAcc = acc.mean().item()
         print_iou(iou, acc, mIoU, mAcc)
@@ -118,15 +120,16 @@ def main():
         #model_path = './results/dam/snapshot/train/GTA5_baseline.pth'
         #model_path = './results/dam/snapshot/train/GTA5_best.pth'
         #model_path = './results/synthia_source_only/snapshot/train/wonkyung.pth'
-        model_path = './results/dam2/snapshot/train/Synthia_best.pth'
+        # model_path = './results/dam2/snapshot/train/Synthia_best.pth'
+        model_path = '/home/paliwal/gta5_deepv2_trained_dass.pth'
         model = ResPair_Deeplab(num_classes=args.num_classes)
         #model = nn.DataParallel(model)
         model.load_state_dict(torch.load(model_path))
         model.eval().cuda()
         testloader = init_test_dataset(cfg, args.dataset, set='val')
 
-        compute_iou(model, testloader, args)
-        #iou, mIoU, acc, mAcc = compute_iou(model, testloader, args)
+        # compute_iou(model, testloader, args)
+        iou, mIoU, acc, mAcc = compute_iou(model, testloader, args)
 
         print('Iter {}  finished, mIoU is {:.2%}'.format(i*2000, mIoU))
 

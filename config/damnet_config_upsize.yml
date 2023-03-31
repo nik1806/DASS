@@ -52,7 +52,7 @@ tensorboard: False
 neptune: False ##!!
 screen: False
 val: True
-val_freq: 500 #300
+val_freq: 300
 
 # Dataset
 source: 'gta5'
@@ -95,6 +95,7 @@ synthia: {
         }
 cityscapes: {
         data_dir: '/share_chairilg/data/cityscapes/uda_variant',
-        data_list: './dataset/list/cityscapes_train.txt',
+        # data_list: './dataset/list/cityscapes_train.txt',
+        data_list: './dataset/list/cityscapes_val.txt',
         input_size: [1024, 512]
         }
