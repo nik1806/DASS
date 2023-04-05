@@ -96,6 +96,6 @@ synthia: {
 cityscapes: {
         data_dir: '/share_chairilg/data/cityscapes/uda_variant',
         # data_list: './dataset/list/cityscapes_train.txt',
-        data_list: './dataset/list/cityscapes_val.txt',
+        data_list: './dataset/list/cityscapes_val_trial.txt',
         input_size: [1024, 512]
         }

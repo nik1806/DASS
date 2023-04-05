@@ -12,6 +12,7 @@ from dataset.dataset import *
 from easydict import EasyDict as edict
 from tqdm import tqdm
 from PIL import Image
+from utils.mwc import mwc_refiner
 
 palette = [128, 64, 128, 244, 35, 232, 70, 70, 70, 102, 102, 156, 190, 153, 153, 153, 153, 153, 250, 170, 30,
            220, 220, 0, 107, 142, 35, 152, 251, 152, 70, 130, 180, 220, 20, 60, 255, 0, 0, 0, 0, 142, 0, 0, 70,
@@ -63,15 +64,26 @@ def compute_iou(model, testloader, args):
             #output, _ =  model(image.cuda(), source=True)
             output, _ =  model(image.cuda(), source=False)
             label = label.cuda()
-            output = interp(output).squeeze()
-            C, H, W = output.shape
+            src_output = interp(output)
+
+            ##!! MWC solver
+            output, mb = mwc_refiner(src_output, name)
+            pred = output.float().cuda()
+            _, H, W = output.shape; C=19
+
+            ##!! original method
+            # output = src_output.squeeze()
+            # pred = output.argmax(dim=0).float().cuda()
+            # C, H, W = output.shape 
+
             Mask = (label.squeeze())<C
 
             pred_e = torch.linspace(0,C-1, steps=C).view(C, 1, 1)
             pred_e = pred_e.repeat(1, H, W).cuda()
-            pred = output.argmax(dim=0).float()
             pred_mask = torch.eq(pred_e, pred).byte()
             pred_mask = pred_mask*Mask
+            
+            # save_results(image, label, src_output.squeeze(0).argmax(dim=0), pred, mb) ##!!
 
             label_e = torch.linspace(0,C-1, steps=C).view(C, 1, 1)
             label_e = label_e.repeat(1, H, W).cuda()
@@ -106,6 +118,86 @@ def compute_iou(model, testloader, args):
         mAcc = acc.mean().item()
         print_iou(iou, acc, mIoU, mAcc)
         return iou, mIoU, acc, mAcc
+    
+def decode_segmap(temp, kwargs=None):
+    colors = [  # [  0,   0,   0],
+        [128, 64, 128],
+        [244, 35, 232],
+        [70, 70, 70],
+        [102, 102, 156],
+        [190, 153, 153],
+        [153, 153, 153],
+        [250, 170, 30],
+        [220, 220, 0],
+        [107, 142, 35],
+        [152, 251, 152],
+        [0, 130, 180],
+        [220, 20, 60],
+        [255, 0, 0],
+        [0, 0, 142],
+        [0, 0, 70],
+        [0, 60, 100],
+        [0, 80, 100],
+        [0, 0, 230],
+        [119, 11, 32],
+    ]
+
+    label_colours = dict(zip(range(19), colors))
+    '''
+    Convert interger class labels to color image for representing segmentations.
+    '''
+    # print(temp.shape)
+    r = temp.copy()
+    g = temp.copy()
+    b = temp.copy()
+    for l in range(0, 19):
+        r[temp == l] = label_colours[l][0]
+        g[temp == l] = label_colours[l][1]
+        b[temp == l] = label_colours[l][2]
+
+    rgb = np.zeros((temp.shape[0], temp.shape[1], 3))
+    rgb[:, :, 0] = r / 255.0
+    rgb[:, :, 1] = g / 255.0
+    rgb[:, :, 2] = b / 255.0
+    return rgb    
+
+def save_results(image, gt, source, out, mb):
+    from matplotlib import pyplot as plt
+    fig = plt.figure(figsize=(40,20))#figsize
+    col=5# if mb else 4
+    
+    fig.add_subplot(1,col,1)
+    image = image.squeeze(0).permute(1,2,0)
+    image = image.data.cpu().numpy()
+    IMG_MEAN = np.array((104.00698793, 116.66876762, 122.67891434), dtype=np.float32)
+    image = (image + IMG_MEAN).astype(np.uint8)
+    plt.imshow(image)
+    plt.title("Original"); plt.axis('off')
+
+    fig.add_subplot(1,col,2)
+    gt_segmap = decode_segmap(gt.squeeze(0).data.cpu().numpy())
+    plt.imshow(gt_segmap)
+    plt.title("Ground truth"); plt.axis('off')
+
+    fig.add_subplot(1,col,3)
+    source_segmap = decode_segmap(source.data.cpu().numpy())
+    plt.imshow(source_segmap)
+    plt.title("Source"); plt.axis('off')
+
+    fig.add_subplot(1,col,4)
+    out_segmap = decode_segmap(out.squeeze(0).data.cpu().numpy())
+    plt.imshow(out_segmap)
+    plt.title("MWC"); plt.axis('off')
+
+    if True:
+        fig.add_subplot(1,col,5)
+        plt.imshow(mb)
+        plt.title("Motion boundary"); plt.axis('off')
+
+    plt.savefig("results/cityscapes_seg.png", bbox_inches='tight')
+    plt.plot()
+    exit()
+
 
 def main():
     args = get_arguments()
@@ -121,7 +213,7 @@ def main():
         #model_path = './results/dam/snapshot/train/GTA5_best.pth'
         #model_path = './results/synthia_source_only/snapshot/train/wonkyung.pth'
         # model_path = './results/dam2/snapshot/train/Synthia_best.pth'
-        model_path = '/home/paliwal/gta5_deepv2_trained_dass.pth'
+        model_path = '/share_chairilg/weights/gta5_deepv2_trained_dass51.pth'
         model = ResPair_Deeplab(num_classes=args.num_classes)
         #model = nn.DataParallel(model)
         model.load_state_dict(torch.load(model_path))
