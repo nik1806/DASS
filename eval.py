@@ -182,7 +182,7 @@ def save_results(image, gt, source, out, mb):
     fig.add_subplot(1,col,3)
     source_segmap = decode_segmap(source.data.cpu().numpy())
     plt.imshow(source_segmap)
-    plt.title("Source"); plt.axis('off')
+    plt.title("DASS"); plt.axis('off')
 
     fig.add_subplot(1,col,4)
     out_segmap = decode_segmap(out.squeeze(0).data.cpu().numpy())
@@ -196,7 +196,7 @@ def save_results(image, gt, source, out, mb):
 
     plt.savefig("results/cityscapes_seg.png", bbox_inches='tight')
     plt.plot()
-    exit()
+    exit() ##!! change to show multiple random instances
 
 
 def main():

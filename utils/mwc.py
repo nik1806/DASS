@@ -3,6 +3,7 @@ import torch
 import os
 from lpmp_mc.raw_solvers import mwc_solver
 import cv2
+import gc
 
 def readFloat(name):
     '''
@@ -105,6 +106,9 @@ def mwc_refiner(pred, img_paths, bound_type='motion'):
             bound_soft = np.load(edge_path)
 
         bound_soft = cv2.resize(bound_soft.reshape(bound_soft.shape[:2]), (W, H))#.reshape(H, W)
+        # bound_soft = np.clip(bound_soft, a_min=np.percentile(bound_soft, 10), a_max=None)
+        # bound_soft = np.clip(bound_soft, a_max=np.percentile(bound_soft, 90), a_min=None, )
+
         ## calculate edge cost
         # point_cost = -np.log(bound_soft) * gamma
         # print(point_cost) 
@@ -112,7 +116,7 @@ def mwc_refiner(pred, img_paths, bound_type='motion'):
         edge_costs_1d = []
         for i, j in E:
             # edge_costs_1d.append((point_cost[i] + point_cost[j]))
-            edge_costs_1d.append(-np.log((bound_soft[i] + bound_soft[j])/2) * gamma)
+            edge_costs_1d.append(-np.log((bound_soft[i] + bound_soft[j])/2) * gamma) ##!! updated formulation
 
         edge_costs_1d = np.array(edge_costs_1d)
         # print(edge_costs_1d.reshape(edge_costs_1d.shape[0]).shape)
@@ -127,5 +131,6 @@ def mwc_refiner(pred, img_paths, bound_type='motion'):
     # print(torch.tensor(refined_labels).shape, refined_labels)
     # print(np.unique(np.array(refined_labels)))
     # exit()
+    gc.collect()
 
     return torch.tensor(np.array(refined_labels)), bound_soft

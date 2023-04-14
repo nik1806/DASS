@@ -18,7 +18,6 @@ import wandb
 
 
 ##!! remove key when making public
-os.environ["WANDB_API_KEY"]="8f4eb3e6949541646d5dfc27a84f62fecd62413c"
 
 ## uncomment following lines for debugging
 # os.environ["WANDB_SILENT"] = "true"

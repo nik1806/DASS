@@ -58,7 +58,7 @@ val_freq: 300
 source: 'gta5'
 target: 'cityscapes'
 worker: 4
-batch_size: 4 #2
+batch_size: 2 #2
 num_classes: 19
 
 #Transforms
