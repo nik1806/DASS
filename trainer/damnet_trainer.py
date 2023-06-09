@@ -160,14 +160,15 @@ class Trainer(BaseTrainer):
         wandb.log({'train_loss': loss})
 
     def train(self):
-        if self.config.neptune:
-            neptune.init(project_qualified_name="leegeon30/segmentation-DA")
-            neptune.create_experiment(params=self.config, name=self.config["note"],
-                                      upload_source_files=['run.py', 'trainer/*.py', 'model/DeeplabV2.py'])
+        # if self.config.neptune:
+        #     # neptune.init(project_qualified_name="leegeon30/segmentation-DA")
+        #     # neptune.create_experiment(params=self.config, name=self.config["note"],
+        #     #                           upload_source_files=['run.py', 'trainer/*.py', 'model/DeeplabV2.py'])
         if self.config.resume:
             self.resume()
         else:
             self.round_start = 0
+            
         best_miou = 0
         best_r = 0
         best_epoch = 0

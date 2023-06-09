@@ -58,6 +58,7 @@ def init_concat_dataset(cfg, plabel_path=None,source_plabel_path=None, selected=
 
     train_transform = standard_transforms.Compose(train_transform_list)
     label_transform = transforms.MaskToTensor()
+    
     if selected is None:
         src_prop=cfg.src_prop
     else:
@@ -73,6 +74,7 @@ def init_concat_dataset(cfg, plabel_path=None,source_plabel_path=None, selected=
                         centroid = centroid,
                         wei_path = wei_path,
                         set='train', plabel_path=source_plabel_path)
+    
     target_dataset = BaseDataSet(target_env.data_dir, target_env.data_list,
                         cfg.target, cfg.num_classes,
                         joint_transform =  target_joint_transform,
@@ -80,6 +82,7 @@ def init_concat_dataset(cfg, plabel_path=None,source_plabel_path=None, selected=
                         selected=target_selected,
                         label_transform = label_transform,
                         set='train', plabel_path=plabel_path)
+    
     mixtrainset = data.ConcatDataset([source_dataset, target_dataset])
     mix_trainloader = data.DataLoader(mixtrainset, batch_size=cfg.batch_size, shuffle=True,
                                                           num_workers=cfg.worker, pin_memory=True, drop_last=True)
