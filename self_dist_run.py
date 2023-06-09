@@ -33,6 +33,11 @@ def parse_args():
                         type=str)
     return parser.parse_args()
 
+def freeze_model(model):
+    for module in model.modules():
+        for i in module.parameters():
+            i.requires_grad = False
+
 def main():
     seed = 1234
     torch.manual_seed(seed)
@@ -61,8 +66,8 @@ def main():
     config.num_classes = 19
 
     teacher_model = init_model(config)
+    freeze_model(teacher_model) # freeze teacher model
 
-    # student_model = None ##!! update
     student_model = ResPair_Deeplab(num_classes=config.num_classes, cfg=config).cuda()
     params = torch.load(config.dist_weight)
     student_model.load_state_dict(params['state_dict'], strict=False)
