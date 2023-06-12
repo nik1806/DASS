@@ -83,6 +83,11 @@ result: './results/dam/miou_result/'
 log: './results/dam/log/'
 plabel: './plabel/dam/' ## hard unset in code
 
+synthia_seq: {
+        data_dir: '/share_chairilg/data/SYNTHIA-SEQS-04-DAWN',
+        data_list: './dataset/list/synthiaseq_list.txt',
+        input_size: [1280, 760]
+        }
 gta5: {
         data_dir: '/share_chairilg/data/gta5',
         data_list: './dataset/list/gta5_list.txt',

@@ -20,7 +20,7 @@ import random
 import wandb
 
 ##!! remove key when making public
-os.environ["WANDB_API_KEY"]="8f4eb3e6949541646d5dfc27a84f62fecd62413c"
+# os.environ["WANDB_API_KEY"]="8f4eb3e6949541646d5dfc27a84f62fecd62413c"
 # os.environ["WANDB_DISABLE_SERVICE"]="True"
 
 ## uncomment following lines for debugging
@@ -42,12 +42,14 @@ def main():
     wandb.init(
                 entity="nik1806",
                 project='DASS-retraining', 
-                name="Run: Source training - DeepLabv2",
+                name="Run: Source only training - Synthia seq (image) ",
                 config=config,
                 )
 
     if config.source=='synthia':
         config.num_classes=16
+    elif config.source=='synthia_seq': ##!!
+        config.num_classes=12
     else:
         config.num_classes=19
 

@@ -177,6 +177,8 @@ def init_source_dataset(cfg, plabel_path=None, selected=None, fuse=False, source
     target_env = cfg[cfg.target]
     if cfg.source=='synthia':
         cfg.num_classes=16
+    elif cfg.source=='synthia_seq':
+        cfg.num_classes=12
     else:
         cfg.num_classes=19
     cfg.source_size = source_env.input_size

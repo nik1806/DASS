@@ -8,7 +8,7 @@ from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 import torchvision.transforms.functional as TF
 import torch
-import imageio
+import cv2
 
 class BaseDataSet(data.Dataset):
     def __init__(self, root, list_path,dataset, num_class,  joint_transform=None, transform=None, label_transform = None,
@@ -55,6 +55,23 @@ class BaseDataSet(data.Dataset):
         self.id2train_synthia = {3: 0, 4: 1, 2: 2, 21: 3, 5: 4, 7: 5,
                           15: 6, 9: 7, 6: 8, 16: 9, 1: 10, 10: 11, 17: 12,
                           8: 13, 18: 14, 19: 15, 20: 16, 12: 17, 11: 18}
+        
+        self.id2train_synthia_seq = {3: 0, 4: 1, 2: 2, 5: 3, 7: 4, 15: 5, 9: 6, 6: 7, 1: 8, 10: 9, 11: 10, 8: 11,} ##!!
+
+        if dataset == 'synthia_seq':
+            if self.plabel_path is None:
+                label_root = osp.join(self.root, 'GT/LABELS/Stereo_Left/Omni_F/')
+            else:
+                label_root = self.plabel_path
+
+            for name in self.img_ids:
+                img_file = osp.join(self.root, "RGB/Stereo_Left/Omni_F/%s" % name)
+                label_file = osp.join(label_root, "%s" % name)
+                self.files.append({
+                    "img": img_file,
+                    "label": label_file,
+                    "name": name
+                })
 
         if dataset =='synthia':
             if self.plabel_path is None:
@@ -110,23 +127,33 @@ class BaseDataSet(data.Dataset):
 
 #        try:
         image = Image.open(datafiles["img"]).convert('RGB')
-        label = Image.open(datafiles["label"])
+        label = Image.open(datafiles["label"]) if self.dataset!='synthia_seq' else cv2.imread(datafiles['label'], cv2.IMREAD_UNCHANGED)[:,:,2] # only one channel contain the label
         name = datafiles["name"]
 
         label = np.asarray(label, np.uint8)
         label_copy = 255 * np.ones(label.shape, dtype=np.uint8)
+        
         if self.dataset=='gta5' or self.dataset=='cityscapes' :
             if self.plabel_path is None:
                 for k, v in self.id2train.items():
                     label_copy[label == k] = v
             else:
                 label_copy = label
+
         elif self.dataset=='synthia':
             if self.plabel_path is None:
                 for k, v in self.id2train_synthia.items():
                     label_copy[label == k] = v
             else:
                 label_copy = label
+                
+        elif self.dataset=='synthia_seq': ##!!
+            if self.plabel_path is None:
+                for k, v in self.id2train_synthia_seq.items():
+                    label_copy[label == k] = v
+            else:
+                label_copy = label
+
         label = Image.fromarray(label_copy.astype(np.uint8))
         if self.joint_transform is not None:
             image, label = self.joint_transform(image, label, None)
