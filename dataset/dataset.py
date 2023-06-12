@@ -203,6 +203,7 @@ def init_source_dataset(cfg, plabel_path=None, selected=None, fuse=False, source
     source_joint_transform = joint_transforms.Compose(source_joint_list)
 
     train_transform_list = [
+            standard_transforms.RandomApply([standard_transforms.ColorJitter(0.8, 0.8, 0.8, 0.2)], p=0.8),
             transforms.FlipChannels(),
             transforms.SubMean(),
             transforms.ToTensor()

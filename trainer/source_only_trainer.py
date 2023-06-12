@@ -92,6 +92,7 @@ class Trainer(BaseTrainer):
     def save_model(self, iter, rep_teacher=False):
         tmp_name = '_'.join(("GTA5", str(iter))) + '.pth'
         torch.save(self.model.state_dict(), osp.join(self.config['snapshot'], tmp_name))
+        wandb.save(osp.join(self.config["snapshot"], tmp_name)) # save model online ##!!
 
     def validate(self):
         self.model = self.model.eval()
