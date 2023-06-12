@@ -36,9 +36,9 @@ class Trainer(BaseTrainer):
         loss.backward()
 
     def train(self):
-        if self.config.neptune:
-            neptune.init(project_qualified_name="nik1806/DASS-training")
-            neptune.create_experiment(params=self.config, name=self.config['note'])
+        # if self.config.neptune:
+        #     neptune.init(project_qualified_name="nik1806/DASS-training")
+        #     neptune.create_experiment(params=self.config, name=self.config['note'])
 
         if self.config.multigpu:
             self.optim = optim.SGD(self.model.module.optim_parameters(self.config.learning_rate),

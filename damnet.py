@@ -34,7 +34,7 @@ def main():
 
     config, writer = init_config('./config/damnet_config_upsize.yml', sys.argv)
 
-    config.num_classes = 19
+    config.num_classes = 19 ##!! change according to dataset
 
     model = init_model(config)
 

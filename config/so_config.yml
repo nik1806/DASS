@@ -9,7 +9,7 @@ fix_seed: True
 
 # Optimizaers
 learning_rate: 7.5e-5
-num_steps: 5000
+num_steps: 10000
 epochs: 20
 weight_decay: 0.0005
 momentum: 0.9
@@ -26,10 +26,10 @@ val: True
 val_freq: 300
 
 # Dataset
-source: 'gta5'
+source: 'synthia_seq'
 target: 'cityscapes'
-worker: 4
-batch_size: 4 #2
+worker: 2
+batch_size: 1 #2
 
 #Transforms
 input_src: 720
@@ -45,10 +45,21 @@ rec: False
 init_weight: '/share_chairilg/weights/DeepLab_resnet_pretrained_init_dass.pth'
 restore_from: None
 
-snapshot: './results/source_only_half/snapshot/'
-result: './results/source_only_half/miou_result/'
-log: './results/source_only_half/log/'
+# snapshot: './results/source_only_half/snapshot/'
+# result: './results/source_only_half/miou_result/'
+# log: './results/source_only_half/log/'
+
+snapshot: './results/synthia_source_only/snapshot/'
+result: './results/synthia_source_only/miou_result/'
+log: './results/synthia_source_only/log/'
 plabel: './plabel'
+
+
+synthia_seq: {
+        data_dir: '/share_chairilg/data/SYNTHIA-SEQS-04-DAWN',
+        data_list: './dataset/list/synthiaseq_list.txt',
+        input_size: [1280, 760]
+        }
 gta5: {
         data_dir: '/share_chairilg/data/gta5',
         data_list: './dataset/list/gta5_list.txt',
