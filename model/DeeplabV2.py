@@ -5,7 +5,7 @@ affine_par = True
 import torch
 import torch.nn.functional as F
 #from torch.cuda.amp import autocast
-from torchsummary import summary
+# from torchsummary import summary
 
 def outS(i):
     i = int(i)
@@ -328,11 +328,11 @@ def ResPair_Deeplab(num_classes=19, cfg=None):
     model = ResNetPair5(Bottleneck, [3, 4, 23, 3], num_classes, cfg)
     return model
 
-if __name__ == '__main__':
-    model = ResPair_Deeplab()
-    input = torch.rand(1, 3, 512, 512)
-    # print(model)
-    summary(model, input)
+# if __name__ == '__main__':
+#     model = ResPair_Deeplab()
+#     input = torch.rand(1, 3, 512, 512)
+#     # print(model)
+#     summary(model, input)
 
-    for name, param in model.children():
-        print(name)
+#     for name, param in model.children():
+#         print(name)

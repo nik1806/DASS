@@ -6,13 +6,13 @@ error                   = exp/$(ClusterId).$(ProcId).err
 log                     = exp/$(ClusterId).log
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT_OR_EVICT
-transfer_input_files =  config, dataset, model, trainer, utils, init_config.py, eval.py, executable_cmd.sh, run.py, so_run.py
+transfer_input_files =  config, dataset, model, trainer, utils, init_config.py, eval.py, executable_cmd.sh, run.py, so_run.py, self_dist_run.py
 transfer_output_files = .
 request_GPUs = 1
-request_CPUs = 8
+request_CPUs = 4
 request_memory = 64G
 requirements = (UidDomain == "cs.uni-saarland.de") \
-                && (GPUs_Capability > 7)
+                && (GPUs_Capability > 5.5)
 +WantGPUHomeMounted = true
 queue 1
 

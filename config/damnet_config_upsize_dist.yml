@@ -37,8 +37,8 @@ start: 0
 round_start: 0
 
 # Optimizers
-learning_rate: 7.5e-5
-num_steps: 20000
+learning_rate: 1.e-5
+num_steps: 30000
 epochs: 30
 weight_decay: 0.0005
 momentum: 0.9
@@ -58,7 +58,7 @@ val_freq: 300
 source: 'gta5'
 target: 'cityscapes'
 worker: 4
-batch_size: 2
+batch_size: 4
 num_classes: 19
 
 #Transforms
@@ -77,7 +77,7 @@ rec: False
 # init_weight: './weights/gta5_source_only.pth'
 # init_weight: '/share_chairilg/weights/gta5_deepv2_source_dass.pth'
 init_weight: '/share_chairilg/weights/gta5_deepv2_trained_dass51.pth' #'/share_chairilg/weights/gta5_'
-dist_weight: 'simclr_r101_1x_sk0.pth'
+dist_weight: '/share_chairilg/weights/simclr_r101_1x_sk0.pth'
 restore_from: None
 
 snapshot: './results/dam/snapshot/'
