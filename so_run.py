@@ -24,8 +24,8 @@ import wandb
 # os.environ["WANDB_DISABLE_SERVICE"]="True"
 
 ## uncomment following lines for debugging
-os.environ["WANDB_SILENT"] = "true"
-os.environ["WANDB_MODE"] = "dryrun"
+# os.environ["WANDB_SILENT"] = "true"
+# os.environ["WANDB_MODE"] = "dryrun"
 
 def main():
     torch.manual_seed(1234)
@@ -49,7 +49,7 @@ def main():
     if config.source=='synthia':
         config.num_classes=16
     elif config.source=='synthia_seq': ##!!
-        config.num_classes=11
+        config.num_classes=12
     else:
         config.num_classes=19
 

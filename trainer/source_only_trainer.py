@@ -17,10 +17,11 @@ import wandb
 
 class Trainer(BaseTrainer):
     def __init__(self, model, config, writer):
-        self.model = model
         self.config = config
         self.writer = writer
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cpu")
+        self.model = model.to(self.device)
 
     def iter(self, batch):
         img, seg_label, _, _, name = batch
@@ -96,9 +97,9 @@ class Trainer(BaseTrainer):
         self.model = self.model.eval()
         testloader = dataset.init_test_dataset(self.config, self.config.target, set='val')
         interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True)
-        union = torch.zeros(19, 1,dtype=torch.float).cuda().float()
-        inter = torch.zeros(19, 1, dtype=torch.float).cuda().float()
-        preds = torch.zeros(19, 1, dtype=torch.float).cuda().float()
+        union = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()
+        inter = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()
+        preds = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()
         with torch.no_grad():
             for index, batch in tqdm(enumerate(testloader)):
                 image, label, _, _, name = batch

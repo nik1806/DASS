@@ -8,9 +8,9 @@ fixbn: True
 fix_seed: True
 
 # Optimizaers
-learning_rate: 7.5e-5
+learning_rate: 7.5e-5 #7.5e-5
 num_steps: 10000
-epochs: 20
+epochs: 40
 weight_decay: 0.0005
 momentum: 0.9
 power: 0.9
@@ -23,13 +23,13 @@ tensorboard: False
 neptune: False
 screen: False
 val: True
-val_freq: 300
+val_freq: 500
 
 # Dataset
 source: 'synthia_seq'
 target: 'cityscapes'
 worker: 2
-batch_size: 1 #2
+batch_size: 2 #2
 
 #Transforms
 input_src: 720
