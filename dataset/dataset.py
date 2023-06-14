@@ -21,24 +21,24 @@ def init_concat_dataset(cfg, plabel_path=None,source_plabel_path=None, selected=
     cfg.target_data_list = target_env.data_list
 
     source_joint_list = [
-            # joint_transforms.RandomSizeAndCrop(cfg.crop_src,
-            #                                     True,
-            #                                     scale_min=cfg.scale_min,
-            #                                     scale_max=cfg.scale_max,
-            #                                     pre_size=cfg.input_src,
-            #                                     rec=cfg.rec
-            #                                     ),
+            joint_transforms.RandomSizeAndCrop(cfg.crop_src,
+                                                True,
+                                                scale_min=cfg.scale_min,
+                                                scale_max=cfg.scale_max,
+                                                pre_size=cfg.input_src,
+                                                rec=cfg.rec
+                                                ),
             joint_transforms.Resize(cfg.crop_src)
             ]
 
     target_joint_list = [
-            # joint_transforms.RandomSizeAndCrop(cfg.crop_tgt,
-            #                                True,
-            #                                scale_min=cfg.scale_min,
-            #                                scale_max=cfg.scale_max,
-            #                                pre_size=cfg.input_tgt,
-            #                                rec=cfg.rec
-            #                                ),
+            joint_transforms.RandomSizeAndCrop(cfg.crop_tgt,
+                                           True,
+                                           scale_min=cfg.scale_min,
+                                           scale_max=cfg.scale_max,
+                                           pre_size=cfg.input_tgt,
+                                           rec=cfg.rec
+                                           ),
             joint_transforms.Resize(cfg.crop_tgt)
             ]
 
@@ -103,24 +103,24 @@ def init_pair_dataset(cfg, plabel_path=None, source_plabel_path=None, selected=N
     cfg.target_data_list = target_env.data_list
 
     source_joint_list = [
-            # joint_transforms.RandomSizeAndCrop(cfg.crop_src,
-            #                                     True,
-            #                                     scale_min=cfg.scale_min,
-            #                                     scale_max=cfg.scale_max,
-            #                                     pre_size=cfg.input_src,
-            #                                     rec=cfg.rec
-            #                                     ),
+            joint_transforms.RandomSizeAndCrop(cfg.crop_src,
+                                                True,
+                                                scale_min=cfg.scale_min,
+                                                scale_max=cfg.scale_max,
+                                                pre_size=cfg.input_src,
+                                                rec=cfg.rec
+                                                ),
             joint_transforms.Resize(cfg.crop_src)
             ]
 
     target_joint_list = [
-            # joint_transforms.RandomSizeAndCrop(cfg.crop_tgt,
-            #                                True,
-            #                                scale_min=cfg.scale_min,
-            #                                scale_max=cfg.scale_max,
-            #                                pre_size=cfg.input_tgt,
-            #                                rec=cfg.rec
-            #                                ),
+            joint_transforms.RandomSizeAndCrop(cfg.crop_tgt,
+                                           True,
+                                           scale_min=cfg.scale_min,
+                                           scale_max=cfg.scale_max,
+                                           pre_size=cfg.input_tgt,
+                                           rec=cfg.rec
+                                           ),
             joint_transforms.Resize(cfg.crop_tgt)
             ]
 
@@ -188,12 +188,12 @@ def init_source_dataset(cfg, plabel_path=None, selected=None, fuse=False, source
     cfg.target_data_dir  = target_env.data_dir
     cfg.target_data_list = target_env.data_list
     source_joint_list = [
-            # joint_transforms.RandomSizeAndCrop(cfg.crop_src,
-            #                                     True,
-            #                                     scale_min=cfg.scale_min,
-            #                                     scale_max=cfg.scale_max,
-            #                                     pre_size=cfg.input_src
-            #                                     ),
+            joint_transforms.RandomSizeAndCrop(cfg.crop_src,
+                                                True,
+                                                scale_min=cfg.scale_min,
+                                                scale_max=cfg.scale_max,
+                                                pre_size=cfg.input_src
+                                                ),
             joint_transforms.Resize(cfg.crop_src)
             ]
 
@@ -232,6 +232,8 @@ def init_test_dataset(config, dataset_name, set, selected=None, prop=None, label
         max_prop = config.pool_prop
     if dataset_name=='synthia' and set=='train':
         max_prop = config.pool_prop
+    if dataset_name=='synthia_seq' and set=='train':
+        max_prop = config.pool_prop
 
     if list_path != 'none':
         data_list = list_path
@@ -245,7 +247,7 @@ def init_test_dataset(config, dataset_name, set, selected=None, prop=None, label
         max_prop=None
 
     if label_ori is None:
-        if dataset_name == 'gta5' or dataset_name=='synthia':
+        if dataset_name == 'gta5' or dataset_name=='synthia' or dataset_name=='synthia_seq':
             label_ori=False
         else:
             label_ori=True
@@ -278,6 +280,10 @@ def init_test_dataset(config, dataset_name, set, selected=None, prop=None, label
                 transforms.MaskToTensor()]
         label_transform = standard_transforms.Compose(label_transform)
     elif label_ori and dataset_name=='synthia':
+        label_transform = [transforms.ResizeLabel((1280, 760)),
+                transforms.MaskToTensor()]
+        label_transform = standard_transforms.Compose(label_transform)
+    elif label_ori and dataset_name=='synthia_seq':
         label_transform = [transforms.ResizeLabel((1280, 760)),
                 transforms.MaskToTensor()]
         label_transform = standard_transforms.Compose(label_transform)
