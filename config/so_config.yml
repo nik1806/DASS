@@ -32,8 +32,8 @@ worker: 2
 batch_size: 2 #2
 
 #Transforms
-input_src: {1280, 760} #720
-input_tgt: {1280, 760} #720
+input_src: [1280, 760] #720
+input_tgt: [1280, 760] #720
 crop_src: 600
 crop_tgt: 600
 mirror: True

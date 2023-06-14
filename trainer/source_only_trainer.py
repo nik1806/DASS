@@ -144,7 +144,7 @@ class Trainer(BaseTrainer):
                 return class13_miou
             elif self.config.source=='synthia_seq':
                 iou = iou.squeeze()
-                class11_iou = torch.cat(iou[:3], iou[4:]) # ignore fence class
+                class11_iou = torch.cat((iou[:3], iou[4:])) # ignore fence class
                 class11_miou = class11_iou.mean().item()
                 print(f'11-Class mIou {class11_miou}')
                 wandb.log({"mIoU":class11_miou})
