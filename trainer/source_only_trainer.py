@@ -61,8 +61,9 @@ class Trainer(BaseTrainer):
                 self.losses = edict({})
                 # losses = 
                 self.iter(batch)
-
                 self.optim.step()
+                wandb.log({"epoch":epoch})
+
                 if cu_iter % self.config.print_freq ==0:
                     self.print_loss(cu_iter)
                 if self.config.val and cu_iter % self.config.val_freq ==0 and cu_iter!=0:
@@ -141,6 +142,13 @@ class Trainer(BaseTrainer):
                 print(class13_iou)
                 print(class13_miou)
                 return class13_miou
+            elif self.config.source=='synthia_seq':
+                iou = iou.squeeze()
+                class11_iou = torch.cat(iou[:3], iou[4:]) # ignore fence class
+                class11_miou = class11_iou.mean().item()
+                print(f'11-Class mIou {class11_miou}')
+                wandb.log({"mIoU":class11_miou})
+                return class11_miou
             else:
                 mIoU = iou.mean().item()
                 mAcc = acc.mean().item()

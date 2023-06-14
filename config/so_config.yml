@@ -8,9 +8,9 @@ fixbn: True
 fix_seed: True
 
 # Optimizaers
-learning_rate: 1.e-5 #7.5e-5
-num_steps: 10000
-epochs: 20
+learning_rate: 1.e-4 #7.5e-5
+num_steps: 50000
+epochs: 50
 weight_decay: 0.0005
 momentum: 0.9
 power: 0.9
@@ -18,12 +18,12 @@ round: 6
 
 # Logging
 print_freq: 1
-save_freq: 2000
+save_freq: 1000 # not used in source only or damnet training
 tensorboard: False
 neptune: False
 screen: False
 val: True
-val_freq: 300
+val_freq: 100
 
 # Dataset
 source: 'synthia_seq'
@@ -32,13 +32,13 @@ worker: 2
 batch_size: 2 #2
 
 #Transforms
-input_src: 720
-input_tgt: 720
+input_src: {1280, 760} #720
+input_tgt: {1280, 760} #720
 crop_src: 600
 crop_tgt: 600
 mirror: True
-scale_min: 0.5
-scale_max: 1.5
+scale_min: 0.8 #0.5
+scale_max: 1.2 #1.5
 rec: False
 
 # Model hypers
