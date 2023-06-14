@@ -22,7 +22,8 @@ def show_config(config, sub=False):
             continue
 #            msg += show_config(value, sub=True)
         else :
-            msg += '{:>25} : {:<15}\n'.format(key, value)
+            # msg += '{:>25} : {:<15}\n'.format(key, value)
+            msg += f'{key:>25} : {value}\n'
     return msg
 
 def type_align(source, target):
