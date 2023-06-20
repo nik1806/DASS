@@ -47,6 +47,8 @@ class Trainer(BaseTrainer):
         else:
             self.optim = optim.SGD(self.model.optim_parameters(self.config.learning_rate),
                           lr=self.config.learning_rate, momentum=self.config.momentum, weight_decay=self.config.weight_decay)
+            # self.optim = optim.Adam(self.model.optim_parameters(self.config.learning_rate),
+            #               lr=self.config.learning_rate, weight_decay=self.config.weight_decay)
 
         self.loader, _ = dataset.init_source_dataset(self.config)#, source_list=self.config.src_list)
 
@@ -91,14 +93,14 @@ class Trainer(BaseTrainer):
         torch.save(self.model.state_dict(), osp.join(self.config["snapshot"], name))
 
     def save_model(self, iter, rep_teacher=False):
-        tmp_name = '_'.join(("GTA5", str(iter))) + '.pth'
+        tmp_name = '_'.join(("synthia", str(iter))) + '.pth'
         torch.save(self.model.state_dict(), osp.join(self.config['snapshot'], tmp_name))
         wandb.save(osp.join(self.config["snapshot"], tmp_name)) # save model online ##!!
 
     def validate(self):
         self.model = self.model.eval()
         testloader = dataset.init_test_dataset(self.config, self.config.target, set='val')
-        interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True)
+        interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True) ##!!
         union = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()
         inter = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()
         preds = torch.zeros(self.config.num_classes, 1, dtype=torch.float).cuda().float()

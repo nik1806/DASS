@@ -8,9 +8,9 @@ fixbn: True
 fix_seed: True
 
 # Optimizaers
-learning_rate: 1.e-4 #7.5e-5
-num_steps: 50000
-epochs: 50
+learning_rate: 1.e-5 #7.5e-5 #2.5e-4
+num_steps: 8500 #34000
+epochs: 20 #80
 weight_decay: 0.0005
 momentum: 0.9
 power: 0.9
@@ -23,7 +23,7 @@ tensorboard: False
 neptune: False
 screen: False
 val: True
-val_freq: 100
+val_freq: 200
 
 # Dataset
 source: 'synthia_seq'
@@ -32,11 +32,13 @@ worker: 2
 batch_size: 2 #2
 
 #Transforms
-input_src: 720 #[1280, 760] 
-input_tgt: 720 #[1280, 760] 
-crop_src: 600
-crop_tgt: 600
-mirror: True
+input_src: 760 #[1280, 760] ## not working
+input_tgt: 760 #[1280, 760] 
+# crop_src: 600 #[1280, 720] #[640, 1280] # 600
+# crop_tgt: 600 #[1280, 720] #[640, 1280] # 600
+crop_src: [1280, 640]
+crop_tgt: [2048, 1024]
+mirror: False # True
 scale_min: 0.8 #0.5
 scale_max: 1.2 #1.5
 rec: False
@@ -72,6 +74,7 @@ synthia: {
         }
 cityscapes: {
         data_dir: '/share_chairilg/data/cityscapes/uda_variant',
-        data_list: './dataset/list/cityscapes_train.txt',
+        # data_list: './dataset/list/cityscapes_train.txt',
+        data_list: './dataset/list/cityscapes_val.txt',
         input_size: [1024, 512]
         }

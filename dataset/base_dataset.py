@@ -49,14 +49,20 @@ class BaseDataSet(data.Dataset):
             self.img_ids = [self.img_ids[i] for i in index]
 
         self.files = []
-        self.id2train = {7: 0, 8: 1, 11: 2, 12: 3, 13: 4, 17: 5,
-                          19: 6, 20: 7, 21: 8, 22: 9, 23: 10, 24: 11, 25: 12,
-                          26: 13, 27: 14, 28: 15, 31: 16, 32: 17, 33: 18}
+        # self.id2train = {7: 0, 8: 1, 11: 2, 12: 3, 13: 4, 17: 5,
+        #                   19: 6, 20: 7, 21: 8, 22: 9, 23: 10, 24: 11, 25: 12,
+        #                   26: 13, 27: 14, 28: 15, 31: 16, 32: 17, 33: 18}
+        
+        ##!! mapping original values to synthia_seq
+        # refer to https://github.com/xing0047/TPS/blob/12e09b4e64c6073aea8418d6447dd80c0761fdbd/tps/dataset/CityscapesSeq_list/info_SynthiaSeq.json
+        self.id2train = {7:0, 8:1, 11:2, 13:3, 17:4, 19:5, 20:6, 21:7, 23:8, 24:9, 25:10, 26:11}
+        
         self.id2train_synthia = {3: 0, 4: 1, 2: 2, 21: 3, 5: 4, 7: 5,
                           15: 6, 9: 7, 6: 8, 16: 9, 1: 10, 10: 11, 17: 12,
                           8: 13, 18: 14, 19: 15, 20: 16, 12: 17, 11: 18}
         
-        self.id2train_synthia_seq = {3: 0, 4: 1, 2: 2, 5: 3, 7: 4, 15: 5, 9: 6, 6: 7, 1: 8, 10: 9, 11: 10, 8: 11,} ##!!
+        self.id2train_synthia_seq = {3: 0, 4: 1, 2: 2, 5: 3, 7: 4, 15: 5, 9: 6, 6: 7, 1: 8, 10: 9, 11: 10, 8: 11} ##!!
+        # self.id2train_synthia_seq = {7:0, 8:1, 11:2, 13:3, 17:4, 19:5, 20:6, 21:7, 23:8, 24:9, 25:10, 26:11}
 
         if dataset == 'synthia_seq':
             if self.plabel_path is None:

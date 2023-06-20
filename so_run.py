@@ -35,7 +35,6 @@ def main():
     cudnn.enabled = True
     cudnn.benchmark = True
 #    torch.backends.cudnn.deterministic = True
-
     config, writer = init_config("config/so_config.yml", sys.argv)
 
     wandb.login(timeout=300)
@@ -45,6 +44,7 @@ def main():
                 name="Run: Source only training - Synthia seq (image)",
                 config=config,
                 )
+    
 
     if config.source=='synthia':
         config.num_classes=16
