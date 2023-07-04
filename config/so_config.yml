@@ -8,9 +8,9 @@ fixbn: True
 fix_seed: True
 
 # Optimizaers
-learning_rate: 1.e-5 #7.5e-5 #2.5e-4
-num_steps: 8500 #34000
-epochs: 20 #80
+learning_rate: 1.e-4 #7.5e-5 #2.5e-4
+num_steps: 17000 #34000
+epochs: 40 #80
 weight_decay: 0.0005
 momentum: 0.9
 power: 0.9
@@ -32,8 +32,8 @@ worker: 2
 batch_size: 2 #2
 
 #Transforms
-input_src: 760 #[1280, 760] ## not working
-input_tgt: 760 #[1280, 760] 
+input_src: 720 #[1280, 760] ## not working
+input_tgt: 720 #[1280, 760] 
 # crop_src: 600 #[1280, 720] #[640, 1280] # 600
 # crop_tgt: 600 #[1280, 720] #[640, 1280] # 600
 crop_src: [1280, 640]
