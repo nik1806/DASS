@@ -76,8 +76,8 @@ class Trainer(BaseTrainer):
                         print(f"best miou:{best_miou}, epoch:{epoch}, iter:{cu_iter}")
                         self.save_model('best_source_only')
                     self.model = self.model.train()
-            if self.config.neptune:
-                neptune.stop()
+            # if self.config.neptune:
+            #     neptune.stop()
 
     def resume(self):
         self.tea = copy.deepcopy(self.model)

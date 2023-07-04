@@ -62,10 +62,10 @@ class Trainer(BaseTrainer):
 
         cs_map = torch.matmul(F.normalize(source_prototypes, dim = 1), F.normalize(feature_t.squeeze().resize(ch,feature_t_h*feature_t_w), dim=0))
         cs_map[cs_map==0] = -1
-        cosine_similarity_map = F.interpolate(cs_map.resize(1, 19,feature_t_h, feature_t_w), size=label_t.size()[-2:])
+        cosine_similarity_map = F.interpolate(cs_map.resize(1, self.config.num_classes, feature_t_h, feature_t_w), size=label_t.size()[-2:])
         cosine_similarity_map *= 10
 
-        cross_entropy_weight = torch.zeros(size=(19,1))
+        cross_entropy_weight = torch.zeros(size=(self.config.num_classes,1))
         for i, element in enumerate(overlap_classes):
             cross_entropy_weight[int(element)] = 1
 
@@ -76,10 +76,10 @@ class Trainer(BaseTrainer):
         target_predicted = prediction_by_cs.argmax(dim=1)
         confidence_of_target_predicted = target_predicted.max(dim=1).values
         confidence_mask  = (confidence_of_target_predicted>0.8)*1
-        target_predicted[target_predicted==0] = 20
+        target_predicted[target_predicted==0] = self.config.num_classes+1
         masked_target_predicted = target_predicted * confidence_mask
         masked_target_predicted[masked_target_predicted==0] = 255
-        masked_target_predicted[masked_target_predicted==20] = 0
+        masked_target_predicted[masked_target_predicted==self.config.num_classes+1] = 0
         masked_target_predicted_resize = F.interpolate(masked_target_predicted.float().unsqueeze(0), size=(feature_t_h, feature_t_w), mode='nearest')
 
         label_t_resize_new = label_t_resize.clone().contiguous()
@@ -92,7 +92,7 @@ class Trainer(BaseTrainer):
             if index in torch.unique(label_t_resize_new) and index != 255.:
                 overlap_classes2.append(index.detach())
 
-        target_prototypes = torch.zeros(size=(19, ch)).cuda()
+        target_prototypes = torch.zeros(size=(self.config.num_classes, ch)).cuda()
         for i, index in enumerate(target_list):
             if index!=255.:
                 #fg_mask_t = ((label_t_resize_new==index)*1).cuda()
@@ -102,7 +102,7 @@ class Trainer(BaseTrainer):
 
         cs_map2 = torch.matmul(F.normalize(target_prototypes, dim = 1), F.normalize(feature_s.squeeze().resize(ch,feature_s_h*feature_s_w), dim=0))
         cs_map2[cs_map2==0] = -1
-        cosine_similarity_map2 = F.interpolate(cs_map2.resize(1, 19, feature_s_h, feature_s_w), size=label_s.size()[-2:])
+        cosine_similarity_map2 = F.interpolate(cs_map2.resize(1, self.config.num_classes, feature_s_h, feature_s_w), size=label_s.size()[-2:])
         cosine_similarity_map2 *= 10
 
         prototype_loss2 = torch.nn.CrossEntropyLoss(ignore_index=255)
@@ -113,7 +113,7 @@ class Trainer(BaseTrainer):
         metric_loss = self.config.lamb_metric1 * metric_loss1 + self.config.lamb_metric2 * metric_loss2
         return metric_loss
 
-    def iter(self, source_batch, target_batch):
+    def iter(self, source_batch, target_batch, total_iter):
         img_s, label_s, _, _, name = source_batch
         img_t, label_t, _, _, name = target_batch
 
@@ -157,7 +157,7 @@ class Trainer(BaseTrainer):
 
         loss.backward()
 
-        wandb.log({'train_loss': loss})
+        wandb.log({'train_loss': loss}, step=total_iter)
 
     def train(self):
         # if self.config.neptune:
@@ -173,18 +173,19 @@ class Trainer(BaseTrainer):
         best_r = 0
         best_epoch = 0
         best_iter = 0
+        total_iter = 0
 
         for r in range(self.round_start, self.config.round):
             self.model = self.model.train()
             #self.source_all = get_list(self.config.gta5.data_list)
             self.target_all = get_list(self.config.cityscapes.data_list)#[:50]
 
-            if r!=0:
-                self.cb_thres = self.gene_thres(self.config.cb_prop + self.config.thres_inc * r)
-                self.save_pred(r)
-                self.plabel_path = osp.join(self.config.plabel, self.config.note, str(r)) ##!!
-            else:
-                self.plabel_path = None # use default path at r=0
+            # if r!=0:
+            self.cb_thres = self.gene_thres(self.config.cb_prop + self.config.thres_inc * r, num_cls=self.config.num_classes)
+            self.save_pred(r)
+            self.plabel_path = osp.join(self.config.plabel, self.config.note, str(r)) ##!!
+            # else:
+            #     self.plabel_path = None # use default path at r=0
 
             self.optim = torch.optim.SGD(
                 self.model.optim_parameters(self.config.learning_rate),
@@ -204,20 +205,24 @@ class Trainer(BaseTrainer):
             for epoch in range(self.config.epochs):
                 for i_iter, source_batch in tqdm(enumerate(self.source_loader)):
                     self.model.train()
+                    total_iter += 1
+
                     if i_iter % (len(self.target_loader.dataset) // self.config.batch_size - 1) == 0:
                         self.target_loader_iter = iter(self.target_loader)
-                    target_batch = self.target_loader_iter.next()
+                    target_batch = next(self.target_loader_iter)
                     cu_step = epoch * self.config.num_steps + i_iter
                     self.losses = edict({})
                     self.optim.zero_grad()
-                    adjust_learning_rate(self.optim, cu_step, self.config)
-                    self.iter(source_batch, target_batch)
+                    lr = adjust_learning_rate(self.optim, cu_step, self.config)
+                    self.iter(source_batch, target_batch, total_iter)
 
                     self.optim.step()
+                    wandb.log({"LR":lr, "epoch":epoch, "iter":i_iter, "round":r}, step=total_iter)
+
                     if i_iter % self.config.print_freq ==0:
                         self.print_loss(i_iter)
                     if i_iter % self.config.val_freq ==0 and i_iter != 0:
-                        miou = self.validate()
+                        miou = self.validate(total_iter)
                         if best_miou < miou:
                             best_miou = miou
                             best_r = r
@@ -227,19 +232,20 @@ class Trainer(BaseTrainer):
                             wandb.log({
                                     "best_miou":best_miou,
                                     "best_epoch":epoch,
-                                    "best_iter":i_iter,   
-                                       })
-                            self.save_model('baseline')
+                                    "best_iter":i_iter,
+                                    "best_round":r,   
+                                       }, step=total_iter)
+                            self.save_model('baseline1method')
                     #if i_iter % self.config.save_freq ==0 and i_iter!=0:
                     #    self.save_model(r*self.config.num_steps + cu_step)
                     if i_iter > self.config.num_steps:
                         break
-                miou = self.validate()
+                miou = self.validate(total_iter)
             #self.config.cb_prop += 0.05
             #self.config.learning_rate = self.config.learning_rate / math.sqrt(2)
-            self.config.learning_rate = self.config.learning_rate / 2
-        if  self.config.neptune:
-            neptune.stop()
+            # self.config.learning_rate = self.config.learning_rate / 2
+        # if  self.config.neptune:
+        #     neptune.stop()
 
     def resume(self):
         iter_num = self.config.init_weight[-5]#.split(".")[0].split("_")[1]
@@ -251,7 +257,7 @@ class Trainer(BaseTrainer):
                 (math.sqrt(2)) ** self.round_start
             )
 
-    def gene_thres(self, prop, num_cls=19):
+    def gene_thres(self, prop, num_cls=12):
         print('[Calculate Threshold using config.cb_prop]') # r in section 3.3
 
         probs = {}
@@ -357,9 +363,9 @@ class Trainer(BaseTrainer):
                 plabel.save("%s/%s.png" % (temp_dir, img_name.split(".")[0]))
 
         print('The Accuracy :{:.2%} and proportion :{:.2%} of Pseudo Labels'.format(accs.avg.item(), props.avg.item()))
-        if self.config.neptune:
-            neptune.send_metric("Acc", accs.avg)
-            neptune.send_metric("Prop", props.avg)
+        # if self.config.neptune:
+        #     neptune.send_metric("Acc", accs.avg)
+        #     neptune.send_metric("Prop", props.avg)
 
     def save_model(self, iter):
         tmp_name = "_".join(("GTA5", str(iter))) + ".pth"
@@ -367,7 +373,7 @@ class Trainer(BaseTrainer):
         torch.save(self.model.state_dict(), osp.join(self.config["snapshot"], tmp_name))
         wandb.save(osp.join(self.config["snapshot"], tmp_name)) # save model online ##!!
 
-    def validate(self):
+    def validate(self, total_iter):
         self.model = self.model.eval()
         testloader = dataset.init_test_dataset(self.config, self.config.target, set='val')
         interp = nn.Upsample(size=(1024, 2048), mode='bilinear', align_corners=True)
@@ -412,7 +418,7 @@ class Trainer(BaseTrainer):
             wandb.log({
                 "mIoU":iou.mean().item(),
                 "mAcc":acc.mean().item()
-            })
+            }, step=total_iter)
             
             if self.config.source=='synthia':
                 iou = iou.squeeze()
@@ -422,13 +428,21 @@ class Trainer(BaseTrainer):
                 class13_miou = class13_iou.mean().item()
                 print('16-Class mIoU:{:.2%}'.format(class16_miou))
                 print('13-Class mIoU:{:.2%}'.format(class13_miou))
+            elif self.config.source=='synthia_seq':
+                iou = iou.squeeze()
+                class11_iou = torch.cat((iou[:3], iou[4:])) # ignore fence class
+                class11_miou = class11_iou.mean().item()
+                print(f'11-Class mIou {class11_miou}')
+                wandb.log({"mIoU":class11_miou}, step=total_iter)
+                return class11_miou
+            
             #mIoU = iou.mean().item()
             #mAcc = acc.mean().item()
             #iou = iou.cpu().numpy()
             #print('mIoU: {:.2%} mAcc : {:.2%} '.format(mIoU, mAcc))
-            if self.config.neptune:
-                neptune.send_metric('mIoU', mIoU)
-                neptune.send_metric('mAcc', mAcc)
+            # if self.config.neptune:
+            #     neptune.send_metric('mIoU', mIoU)
+            #     neptune.send_metric('mAcc', mAcc)
         if self.config.source=='synthia':
             return class13_miou
         else:
@@ -440,9 +454,9 @@ class Trainer(BaseTrainer):
         loss_infor = '  '.join(to_print)
         if self.config.screen:
             print(iter_infor +'  '+ loss_infor)
-        if self.config.neptune:
-            for key in self.losses.keys():
-                neptune.send_metric(key, self.losses[key].item())
+        # if self.config.neptune:
+        #     for key in self.losses.keys():
+        #         neptune.send_metric(key, self.losses[key].item())
         if self.config.tensorboard and self.writer is not None:
             for key in self.losses.keys():
                 self.writer.add_scalar('train/'+key, self.losses[key], iter)

@@ -37,8 +37,8 @@ start: 0
 round_start: 0
 
 # Optimizers
-learning_rate: 7.5e-5
-num_steps: 100000
+learning_rate: 1.e-4 #7.5e-5
+num_steps: 425 #100000
 epochs: 30
 weight_decay: 0.0005
 momentum: 0.9
@@ -55,17 +55,20 @@ val: True
 val_freq: 300
 
 # Dataset
-source: 'gta5'
+source: 'synthia_seq'
 target: 'cityscapes'
 worker: 4
 batch_size: 2 #2
-num_classes: 19
+num_classes: 12
 
 #Transforms
 input_src: 850
 input_tgt: 850
-crop_src: 730
-crop_tgt: 730
+# crop_src: 730
+# crop_tgt: 730
+# crop_src: [640, 320]
+crop_src: [1280, 640]
+crop_tgt: [2048, 1024]
 mirror: True
 scale_min: 0.8
 scale_max: 1.2
@@ -73,9 +76,10 @@ rec: False
 
 # Model hypers
 # init_weight: './weights/'
-init_weight: '/share_chairilg/weights/gta5_deepv2_source_dass.pth'
+# init_weight: '/share_chairilg/weights/gta5_deepv2_source_dass.pth'
 # init_weight: './weights/gta5_source_only_adaptation.pth'
 # init_weight: './weights/gta5_source_only.pth'
+init_weight: '/share_chairilg/weights/synthia_deeplab_source_22.pth'
 restore_from: None
 
 snapshot: './results/dam/snapshot/'
@@ -100,7 +104,7 @@ synthia: {
         }
 cityscapes: {
         data_dir: '/share_chairilg/data/cityscapes/uda_variant',
-        data_list: './dataset/list/cityscapes_train.txt',
+        data_list: './dataset/list/cityscapes_train_trial.txt',
         # data_list: './dataset/list/cityscapes_val_trial.txt',
         input_size: [1024, 512]
         }

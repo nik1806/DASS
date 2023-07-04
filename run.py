@@ -53,12 +53,12 @@ def main():
     wandb.init(
                 entity="nik1806",
                 project='DASS-retraining', 
-                name="Run: damnet method retraining",
+                name="Run: damnet method retraining, synthia seq (image)",
                 config=config,
                 )
     # wandb.run.log_code(".") # to save additional code
 
-    config.num_classes = 19
+    config.num_classes = 12
 
     model = init_model(config)
 
