@@ -6,6 +6,7 @@ train: True
 multigpu: False
 fixbn: True
 fix_seed: True
+pre_filter: True
 
 src_prop: 1 ##!! use full source data
 # target Plabel
@@ -86,6 +87,9 @@ snapshot: './results/dam/snapshot/'
 result: './results/dam/miou_result/'
 log: './results/dam/log/'
 plabel: './plabel/dam/' ## hard unset in code
+cityscapes_flow_train: '/share_chairilg/data/estimated_optical_flow_cityscapes_train'
+cityscapes_flow_valid: '/share_chairilg/data/Estimated_optical_flow_Cityscapes-Seq_val'
+
 
 synthia_seq: {
         data_dir: '/share_chairilg/data/SYNTHIA-SEQS-04-DAWN',
@@ -103,8 +107,9 @@ synthia: {
         input_size: [1280, 760]
         }
 cityscapes: {
-        data_dir: '/share_chairilg/data/cityscapes/uda_variant',
-        data_list: './dataset/list/cityscapes_train_trial.txt',
+        # data_dir: '/share_chairilg/data/cityscapes/uda_variant', # pure image
+        data_dir: '/share_chairilg/data/cityscapes/', # video
+        data_list: './dataset/list/cityscapes_train.txt',
         # data_list: './dataset/list/cityscapes_val_trial.txt',
         input_size: [1024, 512]
         }

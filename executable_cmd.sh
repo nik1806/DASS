@@ -12,6 +12,6 @@ export CONDARC=/home/paliwal/DASS/cache
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 
-# python run.py
+python run.py
 # python self_dist_run.py
-python so_run.py
+# python so_run.py

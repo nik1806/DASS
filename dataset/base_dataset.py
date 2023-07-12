@@ -111,12 +111,26 @@ class BaseDataSet(data.Dataset):
                 })
 
         elif dataset=='cityscapes':
+            # if self.plabel_path is None:
+            #     label_root = osp.join(self.root, 'gtFine', self.set)
+            # else:
+            #     label_root = self.plabel_path
+            # for name in self.img_ids:
+            #     img_file = osp.join(self.root, "leftImg8bit/%s/%s" % (self.set, name))
+            #     label_name = name.replace('leftImg8bit', 'gtFine_labelIds')
+            #     label_file =osp.join(label_root, '%s' % (label_name))
+            #     self.files.append({
+            #         "img": img_file,
+            #         "label":label_file,
+            #         "name": name
+            #     })
+            ##!! for cityscapes seq subset
             if self.plabel_path is None:
-                label_root = osp.join(self.root, 'gtFine', self.set)
+                label_root = osp.join(self.root, 'gtFine_labelIds_sequence', self.set)
             else:
                 label_root = self.plabel_path
-            for name in self.img_ids:
-                img_file = osp.join(self.root, "leftImg8bit/%s/%s" % (self.set, name))
+            for name in self.img_ids: ##!! only use sequence subset
+                img_file = osp.join(self.root, "leftImg8bit_sequence/%s/%s" % (self.set, name))
                 label_name = name.replace('leftImg8bit', 'gtFine_labelIds')
                 label_file =osp.join(label_root, '%s' % (label_name))
                 self.files.append({
@@ -139,12 +153,41 @@ class BaseDataSet(data.Dataset):
         label = np.asarray(label, np.uint8)
         label_copy = 255 * np.ones(label.shape, dtype=np.uint8)
         
-        if self.dataset=='gta5' or self.dataset=='cityscapes' :
+        if self.dataset=='gta5': # or self.dataset=='cityscapes'
             if self.plabel_path is None:
                 for k, v in self.id2train.items():
                     label_copy[label == k] = v
             else:
                 label_copy = label
+
+        if self.dataset=='cityscapes' : ##!! updated for using previous frames
+            frame_cf = int(name.split('/')[-1].replace('_leftImg8bit.png','')[-6:])
+            name_prev = name.replace(str(frame_cf).zfill(6) + '_leftImg8bit.png', str(frame_cf - 1).zfill(6) + '_leftImg8bit.png')
+            image_prev = Image.open(datafiles['img'].replace(name, name_prev)).convert('RGB')
+        
+            if self.plabel_path is None:
+                for k, v in self.id2train.items():
+                    label_copy[label == k] = v
+            else:
+                label_copy = label
+
+            label = Image.fromarray(label_copy.astype(np.uint8))
+            label_prev = label.copy() #np.zeros_like(label) # dummy label; we don't have label for previous frame
+            if self.joint_transform is not None:
+                image, label = self.joint_transform(image, label, None)
+            if self.transform is not None:
+                image = self.transform(image)
+            if self.label_transform is not None:
+                label = self.label_transform(label)
+
+            if self.joint_transform is not None:
+                image_prev, label_prev = self.joint_transform(image_prev, label_prev, None)
+            if self.transform is not None:
+                image_prev = self.transform(image_prev)
+            if self.label_transform is not None:
+                label_prev = self.label_transform(label_prev)
+            
+            return image, label, image_prev, np.array(image.shape), name 
 
         elif self.dataset=='synthia':
             if self.plabel_path is None:

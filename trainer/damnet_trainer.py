@@ -53,7 +53,7 @@ class Trainer(BaseTrainer):
             if index in torch.unique(label_t_resize) and index != 255.:
                 overlap_classes.append(index.detach())
 
-        source_prototypes = torch.zeros(size=(19, ch)).cuda()
+        source_prototypes = torch.zeros(size=(self.config.num_classes, ch)).cuda()
         for i, index in enumerate(source_list):
             if index!=255.:
                 fg_mask_s = ((label_s_resize==index)*1).cuda().detach()
@@ -76,10 +76,10 @@ class Trainer(BaseTrainer):
         target_predicted = prediction_by_cs.argmax(dim=1)
         confidence_of_target_predicted = target_predicted.max(dim=1).values
         confidence_mask  = (confidence_of_target_predicted>0.8)*1
-        target_predicted[target_predicted==0] = self.config.num_classes+1
+        target_predicted[target_predicted==0] = self.config.num_classes
         masked_target_predicted = target_predicted * confidence_mask
         masked_target_predicted[masked_target_predicted==0] = 255
-        masked_target_predicted[masked_target_predicted==self.config.num_classes+1] = 0
+        masked_target_predicted[masked_target_predicted==self.config.num_classes] = 0
         masked_target_predicted_resize = F.interpolate(masked_target_predicted.float().unsqueeze(0), size=(feature_t_h, feature_t_w), mode='nearest')
 
         label_t_resize_new = label_t_resize.clone().contiguous()
@@ -112,15 +112,72 @@ class Trainer(BaseTrainer):
 
         metric_loss = self.config.lamb_metric1 * metric_loss1 + self.config.lamb_metric2 * metric_loss2
         return metric_loss
+    
+
+    def pre_filter(self, flow, prev_pred, pl_curr):
+        ''' 
+            Filter pseudo-labels for current frame if they doesn't match with confident prediction
+            from the previous (after warping).
+        '''
+        # get label and probability for model prediction on previous frame
+        pl_prev = torch.argmax(prev_pred, dim=1).cpu().numpy()
+        prob_prev = torch.softmax(prev_pred, dim=1).cpu().numpy()
+        mask_conf = prob_prev.max(axis=1) >= 0.9 # threshold
+
+        # resize flow
+        interp_flow2cf = nn.Upsample(size=(pl_curr.shape[-2], pl_curr.shape[-1]), mode='bilinear', align_corners=True)
+        interp_flow2cf_ratio = pl_curr.shape[-2] / flow.shape[-2]
+        flow_cf = interp_flow2cf(flow) * interp_flow2cf_ratio
+        flow_cf = flow_cf.cpu().numpy()
+
+        # label warping
+        pl_prev_rec = np.ones(pl_curr.shape) * -1 # missing pixels have negative value after warping
+        rec_positions = np.zeros(pl_curr.shape)
+
+        for x in range(pl_curr.shape[-1]): # along width
+            for y in range(pl_curr.shape[-2]): # along height
+                x_flow = int(round(x - flow_cf[:, 0, y, x][0]))
+                y_flow = int(round(y - flow_cf[:, 1, y, x][0]))
+                if x_flow >= 0 and x_flow < flow_cf.shape[-1] and y_flow >= 0 and y_flow < flow_cf.shape[-2]:
+                    pl_prev_rec[:, y_flow, x_flow] = pl_prev[:, y, x]
+                    rec_positions[:, y_flow, x_flow] = 1 # keep track of filled positions
+
+        mask_filter = (pl_curr != pl_prev_rec) * rec_positions * mask_conf # True if labels don't match / changed
+
+        return np.invert(mask_filter.astype(bool)) # After invert, True - keep labels
+
 
     def iter(self, source_batch, target_batch, total_iter):
         img_s, label_s, _, _, name = source_batch
-        img_t, label_t, _, _, name = target_batch
+        # img_t, label_t, _, _, name = target_batch
+        img_t, label_t, img_prev_t, img_shape, name_t = target_batch
+
+        if self.config.pre_filter:
+            self.model.eval() 
+            # calculating before actual prediction to avoid any unwanted behavior with gradient calc
+            with torch.no_grad():
+                pred_prev_t, feature_prev_t = self.model.forward(img_prev_t.cuda(), source=False)
+            self.model.train() # back to train mode
+
 
         #pred_s, feature_s = self.model.forward(img_s.cuda())
         pred_s, feature_s = self.model.forward(img_s.cuda(), source=True)
         #pred_t, feature_t = self.model.forward(img_t.cuda())
         pred_t, feature_t = self.model.forward(img_t.cuda(), source=False)
+
+        if self.config.pre_filter:
+            ## get flow for cityscapes train set
+            file_name = name_t[0].split('/')[-1]
+            frame = int(file_name.replace('_leftImg8bit.png', '')[-6:])
+            frame1 = frame - 1
+            flow_int16_x10_name = file_name.replace('leftImg8bit.png', str(frame1).zfill(6) + '_int16_x10.npy')
+            flow_int16_x10_tgt = np.load(osp.join(self.config.cityscapes_flow_train, flow_int16_x10_name)) #name[0].split('/')[-1].replace('.png', '_int16_x10.npy')
+            tgt_flow = torch.from_numpy(flow_int16_x10_tgt / 10.0).permute(2, 0, 1).unsqueeze(0)
+            
+            # Filter labels based on correspondance matching (enforcing temporal consistency)
+            mask_t = self.pre_filter(tgt_flow, pred_prev_t, label_t)
+            ignore_t = torch.ones_like(label_t) * 255
+            label_t = torch.where(torch.from_numpy(mask_t), label_t, ignore_t)
 
         label_s = label_s.long().to(self.device)
         label_t = label_t.long().to(self.device)
@@ -241,6 +298,16 @@ class Trainer(BaseTrainer):
                     if i_iter > self.config.num_steps:
                         break
                 miou = self.validate(total_iter)
+                if best_miou < miou:
+                    best_miou = miou
+                    best_epoch = epoch
+                    print('best miou : %.2f, r : %d, epoch : %d'%(best_miou*100, best_r, best_epoch))
+                    wandb.log({
+                            "best_miou":best_miou,
+                            "best_epoch":epoch,
+                            "best_round":r,   
+                                }, step=total_iter)
+                    self.save_model('baseline1method')
             #self.config.cb_prop += 0.05
             #self.config.learning_rate = self.config.learning_rate / math.sqrt(2)
             # self.config.learning_rate = self.config.learning_rate / 2

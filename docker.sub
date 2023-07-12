@@ -12,7 +12,8 @@ request_GPUs = 1
 request_CPUs = 4
 request_memory = 64G
 requirements = (UidDomain == "cs.uni-saarland.de") \
-                && (GPUs_Capability > 5.5)
+                && (GPUs_Capability > 5.5) \
+                && (GPUs_GlobalMemoryMb >= 48000)
 +WantGPUHomeMounted = true
 queue 1
 
